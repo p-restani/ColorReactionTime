@@ -19,7 +19,7 @@ let startTime;
 let currentColor = '';
 let colorBox = document.getElementById('colorBox');
 let changesCount = 0;
-let totalChanges = 1;
+let totalChanges = 21;
 let hasReacted = false;
 let experimentEnded = false;
 let previousColor = '';
