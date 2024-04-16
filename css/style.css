@@ -1,0 +1,58 @@
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+
+.main-container {
+  max-width: 600px; /* Set a max width for your content */
+  margin: 20px auto; /* Centers the content with automatic margins */
+  padding: 0 20px; /* Padding on the sides */
+}
+
+#colorBox {
+  width: 300px;
+  height: 300px;
+  margin: 20px auto; /* Centers the box */
+  background-color: grey;
+}
+
+#instruction {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.2em;
+}
+
+/* Progress container and bar */
+#progressContainer {
+  width: 100%; /* Full width of its parent */
+  background-color: #ddd;
+  padding: 3px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin: 20px 0;
+}
+
+#progressBar {
+  height: 10px;
+  width: 0%;
+  background-color: #4CAF50;
+  border-radius: 3px;
+  transition: width 0.4s ease-in-out;
+}
+#thankYouMessage {
+  margin-top: 100px;
+  margin-bottom: 100px;
+}
+
+#restartButton {
+  float: right;
+  margin-right: 50px;
+}
+
+
+
+/* Additional styles */
+/* ... other styles ... */
