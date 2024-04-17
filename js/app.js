@@ -51,12 +51,10 @@ function changeColor() {
     return;
   }
 
-  previousColor = currentColor;
-  currentColor = getRandomColor(currentColor);
-  colorBox.style.backgroundColor = currentColor;
-
-
   if (!isFirstColor) {
+    previousColor = currentColor;
+    currentColor = getRandomColor(currentColor);
+    colorBox.style.backgroundColor = currentColor;
     startTime = performance.now();
   } else {
     isFirstColor = false;
@@ -64,41 +62,37 @@ function changeColor() {
 
   hasReacted = false;
   changesCount++;
-  setTimeout(updateProgressBar, 550);
+}
+
+function recordReaction() {
+  if (!hasReacted && !isFirstColor) { // Ensure it's not the first color
+    const endTime = performance.now();
+    const reactionTime = endTime - startTime;
+    const transition = previousColor ? `${previousColor}-to-${currentColor}` : null;
+
+    if (transition) {
+      if (!reactionTimes[transition]) {
+        reactionTimes[transition] = [];
+      }
+      reactionTimes[transition].push(reactionTime);
+      console.log(`Reaction Time for ${transition}: ${reactionTime} ms`);
+
+      // Push to individual color times if valid transition
+      if (currentColor in individualColorTimes) {
+        individualColorTimes[currentColor].push(reactionTime);
+      }
+    }
+
+    hasReacted = true;
+    const randomDelay = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
+    setTimeout(changeColor, randomDelay);
+  }
 }
 
 function updateProgressBar() {
   const progressBar = document.getElementById('progressBar');
   const progress = (changesCount / totalChanges) * 100;
   progressBar.style.width = progress + '%';
-}
-function recordReaction() {
-  if (!hasReacted && !isFirstColor) { // Only record reactions if it's not the first color
-    const endTime = performance.now();
-    const reactionTime = endTime - startTime;
-    const transition = previousColor ? `${previousColor}-to-${currentColor}` : null; // Only create a transition if there is a previous color
-
-    if (transition && !reactionTimes[transition]) {
-      reactionTimes[transition] = [];
-    }
-
-    if (transition) {
-      reactionTimes[transition].push(reactionTime);
-      console.log(`Reaction Time for ${transition}: ${reactionTime} ms`);
-    }
-
-    hasReacted = true; // Set the flag to true after recording the reaction
-
-    // Prepare for the next color with a random delay between 2000ms and 4000ms
-    const randomDelay = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
-    setTimeout(changeColor, randomDelay);
-    if (currentColor in individualColorTimes) {
-      individualColorTimes[currentColor].push(reactionTime);
-    }
-  }
-
-  // Reset isFirstColor after the first reaction has been recorded (or ignored)
-  isFirstColor = false;
 }
 
 
@@ -129,11 +123,9 @@ function endExperiment() {
   console.log(averageReactionTimes);
   console.log('Individual Color Averages:', individualAverages);
 
-  // Save the calculated averages to Firestore
   saveExperimentData(averageReactionTimes);
   saveIndividualColorData(individualAverages);
 
-  // Hide colorBox and show the endScreen with thank you message and restart button
   colorBox.style.display = 'none';
   document.getElementById('progressContainer').style.display = 'none';
   document.getElementById('instruction').style.display = 'none';
@@ -195,7 +187,7 @@ async function saveIndividualColorData(data) {
 
 
 function handleInput(event) {
-  // Check if spacebar was pressed, or if it's a touch event
+
   if (event.type === 'keyup' && event.code === 'Space' || event.type === 'touchstart') {
     recordReaction();
   }
