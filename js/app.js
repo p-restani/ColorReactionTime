@@ -62,6 +62,8 @@ function changeColor() {
 
   hasReacted = false;
   changesCount++;
+
+  updateProgressBar();
 }
 
 function recordReaction() {
@@ -84,7 +86,7 @@ function recordReaction() {
     }
 
     hasReacted = true;
-    const randomDelay = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
+    const randomDelay = Math.floor(Math.random() * (6000 - 2000 + 1)) + 2000;
     setTimeout(changeColor, randomDelay);
   }
 }
