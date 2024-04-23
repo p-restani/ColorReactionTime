@@ -11,6 +11,7 @@ const firebaseConfig = {
   measurementId: "G-W4GZ5JKHQS"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -24,26 +25,22 @@ let hasReacted = false;
 let experimentEnded = false;
 let previousColor = '';
 let isFirstColor = true;
-let individualColorTimes = {
-  'red': [],
-  'green': [],
-  'blue': [],
-  'yellow': []
-};
+
+document.getElementById('startButton').addEventListener('click', function() {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('colorBox').style.display = 'block';
+  document.getElementById('instruction').style.display = 'block';
+  changeColor();
+});
+
+document.getElementById('restartButton').addEventListener('click', restartExperiment);
+document.getElementById('colorBox').addEventListener('touchstart', handleInput);
+document.body.addEventListener('keyup', handleInput);
 
 function getRandomColor(excludeColor) {
   const colors = ['red', 'green', 'blue', 'yellow'];
   return colors.filter(color => color !== excludeColor)[Math.floor(Math.random() * (colors.length - 1))];
 }
-
-document.getElementById('startButton').addEventListener('click', function() {
-  document.getElementById('startScreen').style.display = 'none'; // Hide start screen
-  document.getElementById('colorBox').style.display = 'block'; // Show the color box
-  document.getElementById('instruction').style.display = 'block'; // Show the instruction
-  changeColor();
-});
-document.getElementById('restartButton').addEventListener('click', restartExperiment);
-
 
 function changeColor() {
   if (changesCount >= totalChanges) {
@@ -62,140 +59,70 @@ function changeColor() {
 
   hasReacted = false;
   changesCount++;
-
   updateProgressBar();
 }
 
 function recordReaction() {
-  if (!hasReacted && !isFirstColor) { // Ensure it's not the first color
+  if (!hasReacted && !isFirstColor) {
     const endTime = performance.now();
     const reactionTime = endTime - startTime;
     const transition = previousColor ? `${previousColor}-to-${currentColor}` : null;
 
     if (transition) {
-      if (!reactionTimes[transition]) {
-        reactionTimes[transition] = [];
-      }
+      reactionTimes[transition] = reactionTimes[transition] || [];
       reactionTimes[transition].push(reactionTime);
       console.log(`Reaction Time for ${transition}: ${reactionTime} ms`);
-
-      // Push to individual color times if valid transition
-      if (currentColor in individualColorTimes) {
-        individualColorTimes[currentColor].push(reactionTime);
-      }
     }
 
     hasReacted = true;
-    const randomDelay = Math.floor(Math.random() * (6000 - 2000 + 1)) + 2000;
-    setTimeout(changeColor, randomDelay);
+    setTimeout(changeColor, Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000);
   }
 }
 
 function updateProgressBar() {
   const progressBar = document.getElementById('progressBar');
   const progress = (changesCount / totalChanges) * 100;
-  progressBar.style.width = progress + '%';
-}
-
-
-function calculateAverageReactionTimes() {
-  let averageReactionTimes = {};
-  for (let color in reactionTimes) {
-    let sum = reactionTimes[color].reduce((a, b) => a + b, 0);
-    let avg = sum / reactionTimes[color].length;
-    averageReactionTimes[color] = avg;
-  }
-  return averageReactionTimes;
-}
-function calculateIndividualColorAverages() {
-  let averages = {};
-  for (let color in individualColorTimes) {
-    let sum = individualColorTimes[color].reduce((a, b) => a + b, 0);
-    let avg = sum / individualColorTimes[color].length;
-    averages[color] = avg;
-  }
-  return averages;
+  setTimeout(() => {
+    progressBar.style.width = `${progress}%`;
+  }, 500);
 }
 
 function endExperiment() {
   experimentEnded = true;
-  const averageReactionTimes = calculateAverageReactionTimes();
-  const individualAverages = calculateIndividualColorAverages();
-
-  console.log(averageReactionTimes);
-  console.log('Individual Color Averages:', individualAverages);
-
-  saveExperimentData(averageReactionTimes);
-  saveIndividualColorData(individualAverages);
-
-  colorBox.style.display = 'none';
+  saveExperimentData();
+  document.getElementById('colorBox').style.display = 'none';
   document.getElementById('progressContainer').style.display = 'none';
   document.getElementById('instruction').style.display = 'none';
   document.getElementById('endScreen').style.display = 'block';
 }
+
 function restartExperiment() {
-  // Reset experiment variables
   changesCount = 0;
   hasReacted = false;
   experimentEnded = false;
   isFirstColor = true;
   reactionTimes = {};
-  individualColorTimes = {
-    'red': [],
-    'green': [],
-    'blue': [],
-    'yellow': []
-  };
 
   document.getElementById('colorBox').style.display = 'block';
   document.getElementById('progressContainer').style.display = 'block';
   document.getElementById('instruction').style.display = 'block';
   document.getElementById('endScreen').style.display = 'none';
   resetProgressBar();
-
   changeColor();
 }
 
-
-function displayResults(averageReactionTimes) {
-  let results = document.createElement('div');
-  results.id = 'results';
-  for (let transition in averageReactionTimes) {
-    let p = document.createElement('p');
-    p.textContent = `Average reaction time for ${transition}: ${averageReactionTimes[transition]} ms`;
-    results.appendChild(p);
-  }
-  document.body.appendChild(results);
-}
-
-async function saveExperimentData(data) {
+// Save all reaction times to Firestore
+async function saveExperimentData() {
   try {
-    const docRef = await addDoc(collection(db, "experimentData"), data);
+    const docRef = await addDoc(collection(db, "experimentData"), { reactionTimes });
     console.log("Document written with ID:", docRef.id);
   } catch (error) {
     console.error("Error adding document:", error);
   }
 }
 
-async function saveIndividualColorData(data) {
-  try {
-    const docRef = await addDoc(collection(db, "individualColorData"), data);
-    console.log("Individual color data written with ID:", docRef.id);
-  } catch (error) {
-    console.error("Error adding individual color data:", error);
-  }
-}
-
-
-
 function handleInput(event) {
-
   if (event.type === 'keyup' && event.code === 'Space' || event.type === 'touchstart') {
     recordReaction();
   }
 }
-
-
-document.body.addEventListener('keyup', handleInput);
-document.getElementById('colorBox').addEventListener('touchstart', handleInput);
-
