@@ -11,7 +11,6 @@ const firebaseConfig = {
   measurementId: "G-W4GZ5JKHQS"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -30,6 +29,7 @@ document.getElementById('startButton').addEventListener('click', function() {
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('colorBox').style.display = 'block';
   document.getElementById('instruction').style.display = 'block';
+  isFirstColor = false;
   changeColor();
 });
 
@@ -48,14 +48,10 @@ function changeColor() {
     return;
   }
 
-  if (!isFirstColor) {
-    previousColor = currentColor;
-    currentColor = getRandomColor(currentColor);
-    colorBox.style.backgroundColor = currentColor;
-    startTime = performance.now();
-  } else {
-    isFirstColor = false;
-  }
+  previousColor = currentColor;
+  currentColor = getRandomColor(currentColor);
+  colorBox.style.backgroundColor = currentColor;
+  startTime = performance.now();  // Start timing immediately
 
   hasReacted = false;
   changesCount++;
@@ -75,7 +71,12 @@ function recordReaction() {
     }
 
     hasReacted = true;
-    setTimeout(changeColor, Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000);
+    document.getElementById('feedbackContainer').innerHTML = "Reaction recorded!";
+    document.getElementById('feedbackContainer').style.visibility = 'visible';
+    setTimeout(() => {
+      document.getElementById('feedbackContainer').style.visibility = 'hidden';
+    }, 400);
+    setTimeout(changeColor, Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000);
   }
 }
 
@@ -111,7 +112,6 @@ function restartExperiment() {
   changeColor();
 }
 
-// Save all reaction times to Firestore
 async function saveExperimentData() {
   try {
     const docRef = await addDoc(collection(db, "experimentData"), { reactionTimes });
@@ -122,7 +122,7 @@ async function saveExperimentData() {
 }
 
 function handleInput(event) {
-  if (event.type === 'keyup' && event.code === 'Space' || event.type === 'touchstart') {
+  if ((event.type === 'keyup' && event.code === 'Space') || event.type === 'touchstart') {
     recordReaction();
   }
 }

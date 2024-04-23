@@ -18,6 +18,12 @@ body {
   margin: 20px auto; /* Centers the box */
   background-color: grey;
 }
+#feedbackContainer {
+  height: 20px;
+  text-align: center;
+  visibility: hidden;
+  color: #4CAF50;
+}
 
 #instruction {
   text-align: center;
